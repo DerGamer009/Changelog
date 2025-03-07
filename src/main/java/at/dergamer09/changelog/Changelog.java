@@ -29,14 +29,15 @@ public class Changelog extends JavaPlugin implements CommandExecutor, Listener {
         this.saveDefaultConfig();
         this.getCommand("changelog").setExecutor(this);
         Bukkit.getPluginManager().registerEvents(this, this);
-
-        getLogger().info("---------------------------------------------------------------");
-        getLogger().info("&n");
-        getLogger().info(ChatColor.GOLD + "Changelog Plugin Enabled");
-        getLogger().info(ChatColor.GREEN + "Plugin by DerGamer09");
-        getLogger().info(ChatColor.GREEN + "Version: " + Bukkit.getVersion());
+        getLogger().info("--------------------------------------------------------");
         getLogger().info("&m");
-        getLogger().info("---------------------------------------------------------------");
+        getLogger().info(ChatColor.GOLD + "Changelog has been enabled!");
+        getLogger().info(ChatColor.GREEN + "Version: " + this.getDescription().getVersion());
+        getLogger().info(ChatColor.GREEN + "Author: " + this.getDescription().getAuthors());
+        getLogger().info(ChatColor.GREEN + "Website: " + this.getDescription().getWebsite());
+        getLogger().info(ChatColor.GREEN + "Support: https://discord.gg/fKgyae8R4e");
+        getLogger().info("&n");
+        getLogger().info("--------------------------------------------------------");
     }
 
     @Override
@@ -146,4 +147,9 @@ public class Changelog extends JavaPlugin implements CommandExecutor, Listener {
             }
         }
     }
+
+    public List<String> getProvidedAPIVersion() {
+        return List.of("1.21", "1.21.1", "1.21.2", "1.21.3", "1.21.4");
+    }
 }
+
