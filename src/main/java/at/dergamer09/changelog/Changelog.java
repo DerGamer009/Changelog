@@ -67,18 +67,18 @@ public class Changelog extends JavaPlugin implements CommandExecutor, Listener {
             if (index >= changelogList.size()) break;
 
             Map<?, ?> entry = changelogList.get(index);
-            String title = ChatColor.GOLD + (String) entry.get("title");
-            String date = ChatColor.GRAY + (String) entry.get("date");
+            String title = ChatColor.translateAlternateColorCodes('&', (String) entry.get("title"));
+            String date = ChatColor.GRAY + ChatColor.translateAlternateColorCodes('&', (String) entry.get("date"));
             List<String> content = (List<String>) entry.get("content");
 
             List<String> formattedContent = new ArrayList<>();
-            formattedContent.add(ChatColor.GRAY + date);
+            formattedContent.add(date);
             formattedContent.add(" ");
             for (String line : content) {
-                formattedContent.add(ChatColor.LIGHT_PURPLE + line.replace("**", ChatColor.BOLD.toString()));
+                formattedContent.add(ChatColor.translateAlternateColorCodes('&', line));
             }
 
-            ItemStack item = new ItemStack(Material.BOOK);
+            ItemStack item = new ItemStack(Material.WRITABLE_BOOK);
             ItemMeta meta = item.getItemMeta();
             if (meta != null) {
                 meta.setDisplayName(title);
