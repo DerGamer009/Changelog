@@ -1,6 +1,7 @@
 package at.dergamer09.changelog;
 
 import org.bstats.bukkit.Metrics;
+import org.bstats.charts.SingleLineChart;
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.Material;
@@ -32,7 +33,7 @@ public class Changelog extends JavaPlugin implements CommandExecutor, Listener {
         int pluginId = 25012;
         Metrics metrics = new Metrics(this, pluginId);
 
-        metrics.addCustomChart(new Metrics.SimplePie("chart_id", () -> "My value"));
+        metrics.addCustomChart(new SingleLineChart("players_online", () -> Bukkit.getOnlinePlayers().size()));
 
         this.getCommand("changelog").setExecutor(this);
         Bukkit.getPluginManager().registerEvents(this, this);
