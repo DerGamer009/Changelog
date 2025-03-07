@@ -29,11 +29,29 @@ public class Changelog extends JavaPlugin implements CommandExecutor, Listener {
         this.saveDefaultConfig();
         this.getCommand("changelog").setExecutor(this);
         Bukkit.getPluginManager().registerEvents(this, this);
+
+        getLogger().info("---------------------------------------------------------------");
+        getLogger().info("&n");
+        getLogger().info(ChatColor.GOLD + "Changelog Plugin Enabled");
+        getLogger().info(ChatColor.GREEN + "Plugin by DerGamer09");
+        getLogger().info(ChatColor.GREEN + "Version: " + Bukkit.getVersion());
+        getLogger().info("&m");
+        getLogger().info("---------------------------------------------------------------");
     }
 
     @Override
     public boolean onCommand(CommandSender sender, Command command, String label, String[] args) {
         if (command.getName().equalsIgnoreCase("changelog")) {
+            if (args.length > 0 && args[0].equalsIgnoreCase("reload")) {
+                if (sender.hasPermission("changelog.reload")) {
+                    this.reloadConfig();
+                    sender.sendMessage(ChatColor.GREEN + "Die Changelog-Konfiguration wurde neu geladen.");
+                } else {
+                    sender.sendMessage(ChatColor.RED + "Du hast keine Berechtigung, die Changelog-Konfiguration neu zu laden.");
+                }
+                return true;
+            }
+
             if (sender instanceof Player) {
                 Player player = (Player) sender;
                 int page = 0;
