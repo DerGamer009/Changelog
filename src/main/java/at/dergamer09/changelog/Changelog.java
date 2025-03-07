@@ -17,6 +17,7 @@ import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.plugin.java.JavaPlugin;
 
 import java.util.List;
+import java.util.Map;
 
 public class Changelog extends JavaPlugin implements CommandExecutor, Listener {
 
@@ -52,8 +53,8 @@ public class Changelog extends JavaPlugin implements CommandExecutor, Listener {
 
     private void openChangelogGUI(Player player, int page) {
         FileConfiguration config = this.getConfig();
-        List<String> changelog = config.getStringList("changelog");
-        int totalPages = (int) Math.ceil((double) changelog.size() / PAGE_SIZE);
+        List<Map<?, ?>> changelogList = config.getMapList("changelog");
+        int totalPages = (int) Math.ceil((double) changelogList.size() / PAGE_SIZE);
 
         if (page >= totalPages) page = totalPages - 1;
         if (page < 0) page = 0;
@@ -62,13 +63,18 @@ public class Changelog extends JavaPlugin implements CommandExecutor, Listener {
 
         for (int i = 0; i < PAGE_SIZE; i++) {
             int index = page * PAGE_SIZE + i;
-            if (index >= changelog.size()) break;
+            if (index >= changelogList.size()) break;
+
+            Map<?, ?> entry = changelogList.get(index);
+            String title = ChatColor.YELLOW + (String) entry.get("title");
+            String date = ChatColor.GRAY + (String) entry.get("date");
+            List<String> content = (List<String>) entry.get("content");
 
             ItemStack item = new ItemStack(Material.PAPER);
             ItemMeta meta = item.getItemMeta();
             if (meta != null) {
-                meta.setDisplayName(ChatColor.YELLOW + "Update " + (index + 1));
-                meta.setLore(List.of(ChatColor.WHITE + changelog.get(index)));
+                meta.setDisplayName(title);
+                meta.setLore(content);
                 item.setItemMeta(meta);
             }
             gui.setItem(i, item);
@@ -115,4 +121,5 @@ public class Changelog extends JavaPlugin implements CommandExecutor, Listener {
         }
     }
 }
+
 
