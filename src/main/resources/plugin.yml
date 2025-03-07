@@ -4,3 +4,13 @@ main: at.dergamer09.changelog.Changelog
 api-version: '1.21'
 authors: [ DerGamer09 ]
 website: https://www.dergamer09.at
+
+commands:
+  changelog:
+    description: Öffnet die Changelog-GUI.
+    usage: /changelog [Seite]
+    permission: changelog.use
+permissions:
+  changelog.use:
+    description: Erlaubt dem Spieler, den Changelog-Befehl zu nutzen.
+    default: true
