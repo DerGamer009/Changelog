@@ -16,6 +16,7 @@ import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.plugin.java.JavaPlugin;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
@@ -59,22 +60,29 @@ public class Changelog extends JavaPlugin implements CommandExecutor, Listener {
         if (page >= totalPages) page = totalPages - 1;
         if (page < 0) page = 0;
 
-        Inventory gui = Bukkit.createInventory(null, 27, ChatColor.GOLD + "Changelog - Seite " + (page + 1));
+        Inventory gui = Bukkit.createInventory(null, 27, ChatColor.DARK_PURPLE + "Changelog - Seite " + (page + 1));
 
         for (int i = 0; i < PAGE_SIZE; i++) {
             int index = page * PAGE_SIZE + i;
             if (index >= changelogList.size()) break;
 
             Map<?, ?> entry = changelogList.get(index);
-            String title = ChatColor.YELLOW + (String) entry.get("title");
+            String title = ChatColor.GOLD + (String) entry.get("title");
             String date = ChatColor.GRAY + (String) entry.get("date");
             List<String> content = (List<String>) entry.get("content");
 
-            ItemStack item = new ItemStack(Material.PAPER);
+            List<String> formattedContent = new ArrayList<>();
+            formattedContent.add(ChatColor.GRAY + date);
+            formattedContent.add(" ");
+            for (String line : content) {
+                formattedContent.add(ChatColor.LIGHT_PURPLE + line.replace("**", ChatColor.BOLD.toString()));
+            }
+
+            ItemStack item = new ItemStack(Material.BOOK);
             ItemMeta meta = item.getItemMeta();
             if (meta != null) {
                 meta.setDisplayName(title);
-                meta.setLore(content);
+                meta.setLore(formattedContent);
                 item.setItemMeta(meta);
             }
             gui.setItem(i, item);
@@ -105,7 +113,7 @@ public class Changelog extends JavaPlugin implements CommandExecutor, Listener {
 
     @EventHandler
     public void onInventoryClick(InventoryClickEvent event) {
-        if (event.getView().getTitle().startsWith(ChatColor.GOLD + "Changelog - Seite")) {
+        if (event.getView().getTitle().startsWith(ChatColor.DARK_PURPLE + "Changelog - Seite")) {
             event.setCancelled(true);
             Player player = (Player) event.getWhoClicked();
 
@@ -121,5 +129,3 @@ public class Changelog extends JavaPlugin implements CommandExecutor, Listener {
         }
     }
 }
-
-
