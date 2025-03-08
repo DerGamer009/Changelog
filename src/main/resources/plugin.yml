@@ -1,5 +1,5 @@
 name: Changelog
-version: '1.0.3-SNAPSHOT'
+version: '1.0.4-SNAPSHOT'
 main: at.dergamer09.changelog.Changelog
 api-version: '1.21'
 authors: [ DerGamer09 ]

@@ -1,3 +1,54 @@
+language: "en" # Available: "en", "de"
+
+messages:
+  en:
+    changelog_title: "&5Changelog - Page {page}/{max_page}"
+    previous_page: "&aPrevious Page"
+    next_page: "&aNext Page"
+    reload_success: "&aChangelog configuration has been reloaded."
+    no_permission: "&cYou do not have permission to do this."
+    no_previous_page: "&cNo previous page available."
+    no_next_page: "&cNo next page available."
+    menu_closed: "&eMenu closed!"
+  de:
+    changelog_title: "&5Änderungsprotokoll - Seite {page}/{max_page}"
+    previous_page: "&aVorherige Seite"
+    next_page: "&aNächste Seite"
+    reload_success: "&aDie Changelog-Konfiguration wurde neu geladen."
+    no_permission: "&cDu hast keine Berechtigung dazu."
+    no_previous_page: "&cKeine vorherige Seite verfügbar."
+    no_next_page: "&cKeine nächste Seite verfügbar."
+    menu_closed: "&eMenü geschlossen!"
+
+gui_title: "&5Changelog - Page {page}/{max_page}"
+
+navigation:
+  previous:
+    material: "FEATHER"
+    display_name: "&aPrevious Page"
+    lore:
+      - "&7Click to go back"
+  next:
+    material: "FEATHER"
+    display_name: "&aNext Page"
+    lore:
+      - "&7Click to go forward"
+
+entries_per_page: 10 # Defines how many changelog entries fit in one menu before creating a new page.
+
+gui_border:
+  enabled: true
+  material: "GRAY_STAINED_GLASS_PANE"
+  slots: [0, 1, 2, 3, 5, 6, 7, 8, 9, 17, 18, 26]
+
+close_button:
+  enabled: true
+  material: "ENDER_EYE"
+  slot: 22
+  display_name: "&cClose Menu"
+  lore:
+    - "&7Click to close"
+
 changelog:
   - title: "&cNeue Kisten"
     date: "&703.03.2025"

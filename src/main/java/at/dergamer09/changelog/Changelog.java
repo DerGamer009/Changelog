@@ -24,27 +24,21 @@ import java.util.Map;
 
 public class Changelog extends JavaPlugin implements CommandExecutor, Listener {
 
-    private static final int PAGE_SIZE = 20;
-
     @Override
     public void onEnable() {
         this.saveDefaultConfig();
 
         int pluginId = 25012;
         Metrics metrics = new Metrics(this, pluginId);
-
         metrics.addCustomChart(new SingleLineChart("players_online", () -> Bukkit.getOnlinePlayers().size()));
 
         this.getCommand("changelog").setExecutor(this);
         Bukkit.getPluginManager().registerEvents(this, this);
+
         getLogger().info("--------------------------------------------------------");
-        getLogger().info("&m");
         getLogger().info(ChatColor.GOLD + "Changelog has been enabled!");
         getLogger().info(ChatColor.GREEN + "Version: " + this.getDescription().getVersion());
-        getLogger().info(ChatColor.GREEN + "Author: " + this.getDescription().getAuthors());
-        getLogger().info(ChatColor.GREEN + "Website: " + this.getDescription().getWebsite());
         getLogger().info(ChatColor.GREEN + "Support: https://discord.gg/fKgyae8R4e");
-        getLogger().info("&n");
         getLogger().info("--------------------------------------------------------");
     }
 
@@ -54,9 +48,9 @@ public class Changelog extends JavaPlugin implements CommandExecutor, Listener {
             if (args.length > 0 && args[0].equalsIgnoreCase("reload")) {
                 if (sender.hasPermission("changelog.reload")) {
                     this.reloadConfig();
-                    sender.sendMessage(ChatColor.GREEN + "Die Changelog-Konfiguration wurde neu geladen.");
+                    sender.sendMessage(getMessage("reload_success"));
                 } else {
-                    sender.sendMessage(ChatColor.RED + "Du hast keine Berechtigung, die Changelog-Konfiguration neu zu laden.");
+                    sender.sendMessage(getMessage("no_permission"));
                 }
                 return true;
             }
@@ -72,7 +66,7 @@ public class Changelog extends JavaPlugin implements CommandExecutor, Listener {
                 }
                 openChangelogGUI(player, page);
             } else {
-                sender.sendMessage(ChatColor.RED + "Dieser Befehl kann nur von einem Spieler ausgeführt werden.");
+                sender.sendMessage(ChatColor.RED + "This command can only be executed by a player.");
             }
             return true;
         }
@@ -82,15 +76,29 @@ public class Changelog extends JavaPlugin implements CommandExecutor, Listener {
     private void openChangelogGUI(Player player, int page) {
         FileConfiguration config = this.getConfig();
         List<Map<?, ?>> changelogList = config.getMapList("changelog");
-        int totalPages = (int) Math.ceil((double) changelogList.size() / PAGE_SIZE);
+        int entriesPerPage = config.getInt("entries_per_page", 10);
+        int totalPages = (int) Math.ceil((double) changelogList.size() / entriesPerPage);
 
         if (page >= totalPages) page = totalPages - 1;
         if (page < 0) page = 0;
 
-        Inventory gui = Bukkit.createInventory(null, 27, ChatColor.DARK_PURPLE + "Changelog - Seite " + (page + 1));
+        Inventory gui = Bukkit.createInventory(null, 27, getMessage("changelog_title")
+                .replace("{page}", String.valueOf(page + 1))
+                .replace("{max_page}", String.valueOf(totalPages)));
 
-        for (int i = 0; i < PAGE_SIZE; i++) {
-            int index = page * PAGE_SIZE + i;
+        // Fill with border if enabled
+        if (config.getBoolean("gui_border.enabled", false)) {
+            Material borderMaterial = Material.getMaterial(config.getString("gui_border.material", "GRAY_STAINED_GLASS_PANE"));
+            if (borderMaterial != null) {
+                for (int slot : config.getIntegerList("gui_border.slots")) {
+                    gui.setItem(slot, new ItemStack(borderMaterial));
+                }
+            }
+        }
+
+        // Add Changelog Entries
+        for (int i = 0; i < entriesPerPage; i++) {
+            int index = page * entriesPerPage + i;
             if (index >= changelogList.size()) break;
 
             Map<?, ?> entry = changelogList.get(index);
@@ -112,52 +120,69 @@ public class Changelog extends JavaPlugin implements CommandExecutor, Listener {
                 meta.setLore(formattedContent);
                 item.setItemMeta(meta);
             }
-            gui.setItem(i, item);
+            gui.addItem(item);
         }
 
-        if (page > 0) {
-            ItemStack prevPage = new ItemStack(Material.ARROW);
-            ItemMeta prevMeta = prevPage.getItemMeta();
-            if (prevMeta != null) {
-                prevMeta.setDisplayName(ChatColor.GREEN + "Vorherige Seite");
-                prevPage.setItemMeta(prevMeta);
-            }
-            gui.setItem(21, prevPage);
-        }
+        // Navigation Buttons
+        addNavigationButton(gui, "previous", 21, page > 0 ? page - 1 : -1, player);
+        addNavigationButton(gui, "next", 23, page < totalPages - 1 ? page + 1 : -1, player);
 
-        if (page < totalPages - 1) {
-            ItemStack nextPage = new ItemStack(Material.ARROW);
-            ItemMeta nextMeta = nextPage.getItemMeta();
-            if (nextMeta != null) {
-                nextMeta.setDisplayName(ChatColor.GREEN + "Nächste Seite");
-                nextPage.setItemMeta(nextMeta);
+        // Close Button
+        if (config.getBoolean("close_button.enabled", false)) {
+            ItemStack closeItem = new ItemStack(Material.getMaterial(config.getString("close_button.material", "ENDER_EYE")));
+            ItemMeta meta = closeItem.getItemMeta();
+            if (meta != null) {
+                meta.setDisplayName(getMessage("menu_closed"));
+                closeItem.setItemMeta(meta);
             }
-            gui.setItem(23, nextPage);
+            gui.setItem(config.getInt("close_button.slot", 22), closeItem);
         }
 
         player.openInventory(gui);
     }
 
+    private void addNavigationButton(Inventory gui, String type, int slot, int newPage, Player player) {
+        FileConfiguration config = this.getConfig();
+        String path = "navigation." + type;
+        if (newPage == -1) return; // Don't add button if there's no next/previous page
+
+        ItemStack navItem = new ItemStack(Material.getMaterial(config.getString(path + ".material", "FEATHER")));
+        ItemMeta meta = navItem.getItemMeta();
+        if (meta != null) {
+            meta.setDisplayName(getMessage(type + "_page"));
+            meta.setLore(config.getStringList(path + ".lore"));
+            navItem.setItemMeta(meta);
+        }
+        gui.setItem(slot, navItem);
+    }
+
     @EventHandler
     public void onInventoryClick(InventoryClickEvent event) {
-        if (event.getView().getTitle().startsWith(ChatColor.DARK_PURPLE + "Changelog - Seite")) {
+        if (event.getView().getTitle().startsWith(getMessage("changelog_title").split(" ")[0])) {
             event.setCancelled(true);
             Player player = (Player) event.getWhoClicked();
 
-            if (event.getCurrentItem() != null && event.getCurrentItem().getType() == Material.ARROW) {
+            if (event.getCurrentItem() == null) return;
+            Material clickedType = event.getCurrentItem().getType();
+
+            if (clickedType == Material.FEATHER) {
                 String itemName = event.getCurrentItem().getItemMeta().getDisplayName();
                 int currentPage = Integer.parseInt(event.getView().getTitle().replaceAll("[^0-9]", "")) - 1;
-                if (itemName.contains("Vorherige Seite")) {
-                    openChangelogGUI(player, currentPage - 1);
-                } else if (itemName.contains("Nächste Seite")) {
-                    openChangelogGUI(player, currentPage + 1);
-                }
+                if (itemName.contains(getMessage("previous_page"))) openChangelogGUI(player, currentPage - 1);
+                else if (itemName.contains(getMessage("next_page"))) openChangelogGUI(player, currentPage + 1);
+            } else if (clickedType == Material.ENDER_EYE) {
+                player.closeInventory();
+                player.sendMessage(getMessage("menu_closed"));
             }
         }
+    }
+
+    private String getMessage(String key) {
+        String lang = getConfig().getString("language", "en");
+        return ChatColor.translateAlternateColorCodes('&', getConfig().getString("messages." + lang + "." + key, key));
     }
 
     public List<String> getProvidedAPIVersion() {
         return List.of("1.21", "1.21.1", "1.21.2", "1.21.3", "1.21.4");
     }
 }
-
