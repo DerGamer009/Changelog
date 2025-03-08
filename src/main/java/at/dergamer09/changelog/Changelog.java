@@ -19,6 +19,7 @@ import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.plugin.java.JavaPlugin;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 
@@ -76,27 +77,36 @@ public class Changelog extends JavaPlugin implements CommandExecutor, Listener {
     private void openChangelogGUI(Player player, int page) {
         FileConfiguration config = this.getConfig();
         List<Map<?, ?>> changelogList = config.getMapList("changelog");
-        int entriesPerPage = config.getInt("entries_per_page", 10);
+        int entriesPerPage = 21; // Places changelogs in available slots only
         int totalPages = (int) Math.ceil((double) changelogList.size() / entriesPerPage);
 
         if (page >= totalPages) page = totalPages - 1;
         if (page < 0) page = 0;
 
-        Inventory gui = Bukkit.createInventory(null, 27, getMessage("changelog_title")
+        Inventory gui = Bukkit.createInventory(null, 54, getMessage("changelog_title")
                 .replace("{page}", String.valueOf(page + 1))
                 .replace("{max_page}", String.valueOf(totalPages)));
+
+        // GUI Slots for Changelog Entries
+        List<Integer> entrySlots = Arrays.asList(
+                10, 11, 12, 13, 14, 15, 16,
+                19, 20, 21, 22, 23, 24, 25,
+                28, 29, 30, 31, 32, 33, 34
+        );
 
         // Fill with border if enabled
         if (config.getBoolean("gui_border.enabled", false)) {
             Material borderMaterial = Material.getMaterial(config.getString("gui_border.material", "GRAY_STAINED_GLASS_PANE"));
             if (borderMaterial != null) {
-                for (int slot : config.getIntegerList("gui_border.slots")) {
+                for (int slot : Arrays.asList(0, 1, 2, 3, 4, 5, 6, 7, 8,
+                        9, 17, 18, 26, 27, 35,
+                        36, 37, 38, 39, 40, 41, 42, 43, 44)) {
                     gui.setItem(slot, new ItemStack(borderMaterial));
                 }
             }
         }
 
-        // Add Changelog Entries
+        // Add Changelog Entries in Proper Slots
         for (int i = 0; i < entriesPerPage; i++) {
             int index = page * entriesPerPage + i;
             if (index >= changelogList.size()) break;
@@ -120,12 +130,12 @@ public class Changelog extends JavaPlugin implements CommandExecutor, Listener {
                 meta.setLore(formattedContent);
                 item.setItemMeta(meta);
             }
-            gui.addItem(item);
+            gui.setItem(entrySlots.get(i), item);
         }
 
         // Navigation Buttons
-        addNavigationButton(gui, "previous", 21, page > 0 ? page - 1 : -1, player);
-        addNavigationButton(gui, "next", 23, page < totalPages - 1 ? page + 1 : -1, player);
+        addNavigationButton(gui, "previous", 48, page > 0 ? page - 1 : -1, player);
+        addNavigationButton(gui, "next", 50, page < totalPages - 1 ? page + 1 : -1, player);
 
         // Close Button
         if (config.getBoolean("close_button.enabled", false)) {
@@ -135,7 +145,7 @@ public class Changelog extends JavaPlugin implements CommandExecutor, Listener {
                 meta.setDisplayName(getMessage("menu_closed"));
                 closeItem.setItemMeta(meta);
             }
-            gui.setItem(config.getInt("close_button.slot", 22), closeItem);
+            gui.setItem(49, closeItem);
         }
 
         player.openInventory(gui);
@@ -180,9 +190,5 @@ public class Changelog extends JavaPlugin implements CommandExecutor, Listener {
     private String getMessage(String key) {
         String lang = getConfig().getString("language", "en");
         return ChatColor.translateAlternateColorCodes('&', getConfig().getString("messages." + lang + "." + key, key));
-    }
-
-    public List<String> getProvidedAPIVersion() {
-        return List.of("1.21", "1.21.1", "1.21.2", "1.21.3", "1.21.4");
     }
 }
