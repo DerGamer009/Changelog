@@ -56,8 +56,12 @@ public class Changelog extends JavaPlugin implements CommandExecutor, Listener {
                 return true;
             }
 
-            if (sender instanceof Player) {
-                Player player = (Player) sender;
+            if (sender instanceof Player player) {
+                if (!player.hasPermission("changelog.use")) {
+                    sender.sendMessage(getMessage("no_permission"));
+                    return true;
+                }
+
                 int page = 0;
                 if (args.length > 0) {
                     try {
@@ -77,8 +81,14 @@ public class Changelog extends JavaPlugin implements CommandExecutor, Listener {
     private void openChangelogGUI(Player player, int page) {
         FileConfiguration config = this.getConfig();
         List<Map<?, ?>> changelogList = config.getMapList("changelog");
-        int entriesPerPage = 21; // Places changelogs in available slots only
-        int totalPages = (int) Math.ceil((double) changelogList.size() / entriesPerPage);
+        List<Integer> entrySlots = Arrays.asList(
+                10, 11, 12, 13, 14, 15, 16,
+                19, 20, 21, 22, 23, 24, 25,
+                28, 29, 30, 31, 32, 33, 34
+        );
+
+        int entriesPerPage = Math.min(config.getInt("entries_per_page", 21), entrySlots.size());
+        int totalPages = (int) Math.ceil((double) Math.max(changelogList.size(), 1) / entriesPerPage);
 
         if (page >= totalPages) page = totalPages - 1;
         if (page < 0) page = 0;
@@ -88,11 +98,6 @@ public class Changelog extends JavaPlugin implements CommandExecutor, Listener {
                 .replace("{max_page}", String.valueOf(totalPages)));
 
         // GUI Slots for Changelog Entries
-        List<Integer> entrySlots = Arrays.asList(
-                10, 11, 12, 13, 14, 15, 16,
-                19, 20, 21, 22, 23, 24, 25,
-                28, 29, 30, 31, 32, 33, 34
-        );
 
         // Fill with border if enabled
         if (config.getBoolean("gui_border.enabled", false)) {
@@ -123,7 +128,9 @@ public class Changelog extends JavaPlugin implements CommandExecutor, Listener {
                 formattedContent.add(ChatColor.translateAlternateColorCodes('&', line));
             }
 
-            ItemStack item = new ItemStack(Material.WRITABLE_BOOK);
+            Material entryMaterial = Material.getMaterial(config.getString("entry_item_material", "WRITABLE_BOOK"));
+            if (entryMaterial == null) entryMaterial = Material.WRITABLE_BOOK;
+            ItemStack item = new ItemStack(entryMaterial);
             ItemMeta meta = item.getItemMeta();
             if (meta != null) {
                 meta.setDisplayName(title);
@@ -134,18 +141,29 @@ public class Changelog extends JavaPlugin implements CommandExecutor, Listener {
         }
 
         // Navigation Buttons
-        addNavigationButton(gui, "previous", 48, page > 0 ? page - 1 : -1, player);
-        addNavigationButton(gui, "next", 50, page < totalPages - 1 ? page + 1 : -1, player);
+        int previousSlot = config.getInt("navigation.previous.slot", 48);
+        int nextSlot = config.getInt("navigation.next.slot", 50);
+        addNavigationButton(gui, "previous", previousSlot, page > 0 ? page - 1 : -1, player);
+        addNavigationButton(gui, "next", nextSlot, page < totalPages - 1 ? page + 1 : -1, player);
 
         // Close Button
         if (config.getBoolean("close_button.enabled", false)) {
-            ItemStack closeItem = new ItemStack(Material.getMaterial(config.getString("close_button.material", "ENDER_EYE")));
+            int closeSlot = config.getInt("close_button.slot", 49);
+            Material closeMat = Material.getMaterial(config.getString("close_button.material", "ENDER_EYE"));
+            if (closeMat == null) closeMat = Material.ENDER_EYE;
+            ItemStack closeItem = new ItemStack(closeMat);
             ItemMeta meta = closeItem.getItemMeta();
             if (meta != null) {
-                meta.setDisplayName(getMessage("menu_closed"));
+                String name = config.getString("close_button.display_name");
+                if (name != null) {
+                    meta.setDisplayName(ChatColor.translateAlternateColorCodes('&', name));
+                } else {
+                    meta.setDisplayName(getMessage("menu_closed"));
+                }
+                meta.setLore(config.getStringList("close_button.lore"));
                 closeItem.setItemMeta(meta);
             }
-            gui.setItem(49, closeItem);
+            gui.setItem(closeSlot, closeItem);
         }
 
         player.openInventory(gui);
@@ -159,7 +177,9 @@ public class Changelog extends JavaPlugin implements CommandExecutor, Listener {
         ItemStack navItem = new ItemStack(Material.getMaterial(config.getString(path + ".material", "FEATHER")));
         ItemMeta meta = navItem.getItemMeta();
         if (meta != null) {
-            meta.setDisplayName(getMessage(type + "_page"));
+            String name = config.getString(path + ".display_name");
+            if (name != null) meta.setDisplayName(ChatColor.translateAlternateColorCodes('&', name));
+            else meta.setDisplayName(getMessage(type + "_page"));
             meta.setLore(config.getStringList(path + ".lore"));
             navItem.setItemMeta(meta);
         }
@@ -173,14 +193,27 @@ public class Changelog extends JavaPlugin implements CommandExecutor, Listener {
             Player player = (Player) event.getWhoClicked();
 
             if (event.getCurrentItem() == null) return;
+            FileConfiguration config = this.getConfig();
+            Material navMaterial = Material.getMaterial(config.getString("navigation.previous.material", "FEATHER"));
+            if (navMaterial == null) navMaterial = Material.FEATHER;
+            Material navNextMaterial = Material.getMaterial(config.getString("navigation.next.material", "FEATHER"));
+            if (navNextMaterial == null) navNextMaterial = Material.FEATHER;
+            Material closeMaterial = Material.getMaterial(config.getString("close_button.material", "ENDER_EYE"));
+            if (closeMaterial == null) closeMaterial = Material.ENDER_EYE;
+
             Material clickedType = event.getCurrentItem().getType();
 
-            if (clickedType == Material.FEATHER) {
+            if (clickedType == navMaterial || clickedType == navNextMaterial) {
                 String itemName = event.getCurrentItem().getItemMeta().getDisplayName();
-                int currentPage = Integer.parseInt(event.getView().getTitle().replaceAll("[^0-9]", "")) - 1;
+                String title = ChatColor.stripColor(event.getView().getTitle());
+                int currentPage = 0;
+                java.util.regex.Matcher matcher = java.util.regex.Pattern.compile("(\\d+)/(\\d+)").matcher(title);
+                if (matcher.find()) {
+                    currentPage = Integer.parseInt(matcher.group(1)) - 1;
+                }
                 if (itemName.contains(getMessage("previous_page"))) openChangelogGUI(player, currentPage - 1);
                 else if (itemName.contains(getMessage("next_page"))) openChangelogGUI(player, currentPage + 1);
-            } else if (clickedType == Material.ENDER_EYE) {
+            } else if (clickedType == closeMaterial) {
                 player.closeInventory();
                 player.sendMessage(getMessage("menu_closed"));
             }
