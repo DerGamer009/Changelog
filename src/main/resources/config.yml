@@ -26,15 +26,18 @@ navigation:
   previous:
     material: "FEATHER"
     display_name: "&aPrevious Page"
+    slot: 48
     lore:
       - "&7Click to go back"
   next:
     material: "FEATHER"
     display_name: "&aNext Page"
+    slot: 50
     lore:
       - "&7Click to go forward"
 
 entries_per_page: 10 # Defines how many changelog entries fit in one menu before creating a new page.
+entry_item_material: "WRITABLE_BOOK" # Material for each changelog entry item.
 
 gui_border:
   enabled: true
