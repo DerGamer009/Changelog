@@ -103,10 +103,16 @@ public class Changelog extends JavaPlugin implements CommandExecutor, Listener {
         if (config.getBoolean("gui_border.enabled", false)) {
             Material borderMaterial = Material.getMaterial(config.getString("gui_border.material", "GRAY_STAINED_GLASS_PANE"));
             if (borderMaterial != null) {
-                for (int slot : Arrays.asList(0, 1, 2, 3, 4, 5, 6, 7, 8,
-                        9, 17, 18, 26, 27, 35,
-                        36, 37, 38, 39, 40, 41, 42, 43, 44)) {
-                    gui.setItem(slot, new ItemStack(borderMaterial));
+                List<Integer> borderSlots = config.getIntegerList("gui_border.slots");
+                if (borderSlots.isEmpty()) {
+                    borderSlots = Arrays.asList(0, 1, 2, 3, 4, 5, 6, 7, 8,
+                            9, 17, 18, 26, 27, 35,
+                            36, 37, 38, 39, 40, 41, 42, 43, 44);
+                }
+                for (int slot : borderSlots) {
+                    if (slot >= 0 && slot < gui.getSize()) {
+                        gui.setItem(slot, new ItemStack(borderMaterial));
+                    }
                 }
             }
         }
@@ -180,7 +186,14 @@ public class Changelog extends JavaPlugin implements CommandExecutor, Listener {
             String name = config.getString(path + ".display_name");
             if (name != null) meta.setDisplayName(ChatColor.translateAlternateColorCodes('&', name));
             else meta.setDisplayName(getMessage(type + "_page"));
-            meta.setLore(config.getStringList(path + ".lore"));
+
+            List<String> lore = config.getStringList(path + ".lore");
+            if (!lore.isEmpty()) {
+                for (int i = 0; i < lore.size(); i++) {
+                    lore.set(i, ChatColor.translateAlternateColorCodes('&', lore.get(i)));
+                }
+                meta.setLore(lore);
+            }
             navItem.setItemMeta(meta);
         }
         gui.setItem(slot, navItem);
@@ -194,26 +207,25 @@ public class Changelog extends JavaPlugin implements CommandExecutor, Listener {
 
             if (event.getCurrentItem() == null) return;
             FileConfiguration config = this.getConfig();
-            Material navMaterial = Material.getMaterial(config.getString("navigation.previous.material", "FEATHER"));
-            if (navMaterial == null) navMaterial = Material.FEATHER;
-            Material navNextMaterial = Material.getMaterial(config.getString("navigation.next.material", "FEATHER"));
-            if (navNextMaterial == null) navNextMaterial = Material.FEATHER;
-            Material closeMaterial = Material.getMaterial(config.getString("close_button.material", "ENDER_EYE"));
-            if (closeMaterial == null) closeMaterial = Material.ENDER_EYE;
 
-            Material clickedType = event.getCurrentItem().getType();
+            int previousSlot = config.getInt("navigation.previous.slot", 48);
+            int nextSlot = config.getInt("navigation.next.slot", 50);
+            int closeSlot = config.getInt("close_button.slot", 49);
 
-            if (clickedType == navMaterial || clickedType == navNextMaterial) {
-                String itemName = event.getCurrentItem().getItemMeta().getDisplayName();
-                String title = ChatColor.stripColor(event.getView().getTitle());
-                int currentPage = 0;
-                java.util.regex.Matcher matcher = java.util.regex.Pattern.compile("(\\d+)/(\\d+)").matcher(title);
-                if (matcher.find()) {
-                    currentPage = Integer.parseInt(matcher.group(1)) - 1;
-                }
-                if (itemName.contains(getMessage("previous_page"))) openChangelogGUI(player, currentPage - 1);
-                else if (itemName.contains(getMessage("next_page"))) openChangelogGUI(player, currentPage + 1);
-            } else if (clickedType == closeMaterial) {
+            int rawSlot = event.getRawSlot();
+
+            String title = ChatColor.stripColor(event.getView().getTitle());
+            int currentPage = 0;
+            java.util.regex.Matcher matcher = java.util.regex.Pattern.compile("(\\d+)/(\\d+)").matcher(title);
+            if (matcher.find()) {
+                currentPage = Integer.parseInt(matcher.group(1)) - 1;
+            }
+
+            if (rawSlot == previousSlot) {
+                openChangelogGUI(player, currentPage - 1);
+            } else if (rawSlot == nextSlot) {
+                openChangelogGUI(player, currentPage + 1);
+            } else if (rawSlot == closeSlot && config.getBoolean("close_button.enabled", false)) {
                 player.closeInventory();
                 player.sendMessage(getMessage("menu_closed"));
             }
