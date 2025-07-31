@@ -43,10 +43,10 @@ public class ChangelogGUI implements Listener {
             player.sendMessage(ChatColor.RED + "Error loading changelog.");
             return;
         }
-        int maxPages = (int) Math.ceil(items.size() / (double) entriesPerPage);
+        // ensure at least one page so negative indices are never produced
+        int maxPages = Math.max(1, (int) Math.ceil(items.size() / (double) entriesPerPage));
         if (page < 0) page = 0;
         if (page >= maxPages) page = maxPages - 1;
-        if (maxPages == 0) maxPages = 1;
 
         Inventory inv = Bukkit.createInventory(null, 54, ChatColor.DARK_PURPLE + "Changelog " + (page + 1) + "/" + maxPages);
         int start = page * entriesPerPage;
