@@ -1,0 +1,8 @@
+name: Changelog
+version: '1.0.0'
+main: at.dergamer09.changelog.ChangelogPlugin
+api-version: '1.21'
+commands:
+  changelog:
+    description: Manage or view changelog
+    usage: /changelog
