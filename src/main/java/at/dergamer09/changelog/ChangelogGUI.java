@@ -87,7 +87,7 @@ public class ChangelogGUI implements Listener {
         addChangelogEntries(inv, entries, page);
 
         // Add navigation and control buttons
-        addNavigationButtons(inv, page, maxPages);
+        addNavigationButtons(inv, page, maxPages, entries.size());
 
         player.openInventory(inv);
     }
@@ -148,7 +148,7 @@ public class ChangelogGUI implements Listener {
         return createItem(material, displayName, lore);
     }
 
-    private void addNavigationButtons(Inventory inv, int page, int maxPages) {
+    private void addNavigationButtons(Inventory inv, int page, int maxPages, int totalEntries) {
         // Previous page button
         if (page > 0) {
             ItemStack prev = createItem(
@@ -195,7 +195,7 @@ public class ChangelogGUI implements Listener {
             Arrays.asList(
                 "",
                 ChatColor.YELLOW + "📊 Statistiken:",
-                ChatColor.WHITE + "• Einträge gesamt: " + ChatColor.AQUA + entries.size(),
+                ChatColor.WHITE + "• Einträge gesamt: " + ChatColor.AQUA + totalEntries,
                 ChatColor.WHITE + "• Aktuelle Seite: " + ChatColor.AQUA + (page + 1) + "/" + maxPages,
                 "",
                 ChatColor.GRAY + "Entwickelt von " + ChatColor.WHITE + "DerGamer09"
