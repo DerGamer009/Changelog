@@ -41,7 +41,7 @@ public class DatabaseManager {
         }
     }
 
-    private void setupMySQL(FileConfiguration config) throws ClassNotFoundException {
+    private void setupMySQL(FileConfiguration config) throws ClassNotFoundException, SQLException {
         String host = config.getString("database.mysql.host", config.getString("database.host", "localhost"));
         int port = config.getInt("database.mysql.port", config.getInt("database.port", 3306));
         String db = config.getString("database.mysql.database", config.getString("database.name", "changelog"));
