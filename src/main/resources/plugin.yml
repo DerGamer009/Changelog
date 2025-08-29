@@ -1,8 +1,57 @@
 name: Changelog
-version: '1.0.0'
+version: '1.1.0-SNAPSHOT'
 main: at.dergamer09.changelog.ChangelogPlugin
 api-version: '1.21'
+author: DerGamer09
+description: A modern changelog plugin with GUI support for Minecraft servers
+website: https://github.com/DerGamer09
+
 commands:
   changelog:
-    description: Manage or view changelog
-    usage: /changelog
+    description: Manage or view changelog entries
+    usage: |
+      /changelog - Open changelog GUI
+      /changelog help - Show help
+      /changelog add <message> - Add entry (admin)
+      /changelog remove <id> - Remove entry (admin)
+      /changelog list - List all entries (admin)
+      /changelog reload - Reload config (admin)
+    aliases: [cl, changes, updates]
+
+permissions:
+  changelog.*:
+    description: Gives access to all changelog commands
+    default: op
+    children:
+      changelog.view: true
+      changelog.admin: true
+  
+  changelog.view:
+    description: Allows viewing changelog entries
+    default: true
+  
+  changelog.admin:
+    description: Allows managing changelog entries
+    default: op
+    children:
+      changelog.view: true
+      changelog.add: true
+      changelog.remove: true
+      changelog.list: true
+      changelog.reload: true
+  
+  changelog.add:
+    description: Allows adding changelog entries
+    default: op
+  
+  changelog.remove:
+    description: Allows removing changelog entries
+    default: op
+  
+  changelog.list:
+    description: Allows listing all changelog entries
+    default: op
+  
+  changelog.reload:
+    description: Allows reloading the plugin configuration
+    default: op

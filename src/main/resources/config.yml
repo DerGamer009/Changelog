@@ -1,7 +1,67 @@
+# Changelog Plugin Configuration
+# Plugin by DerGamer09
+
+# Database Configuration
 database:
-  type: sqlite # "mysql" or "sqlite"
-  host: localhost
-  port: 3306
-  name: changelog
-  user: root
-  password: ''
+  # Database type: "sqlite" or "mysql"
+  # SQLite is recommended for most servers (no setup required)
+  type: sqlite
+  
+  # MySQL Configuration (only used if type is "mysql")
+  mysql:
+    host: localhost
+    port: 3306
+    database: changelog
+    username: root
+    password: ''
+    # Additional MySQL options
+    useSSL: false
+    allowPublicKeyRetrieval: true
+    serverTimezone: UTC
+
+# GUI Configuration
+gui:
+  # Number of changelog entries per page
+  entriesPerPage: 28
+  
+  # GUI title (supports color codes with &)
+  title: "&5&lChangelog"
+  
+  # Border item (GRAY_STAINED_GLASS_PANE, BLACK_STAINED_GLASS_PANE, etc.)
+  borderItem: GRAY_STAINED_GLASS_PANE
+
+# Message Configuration
+messages:
+  # Prefix for all plugin messages
+  prefix: "&8[&6Changelog&8] "
+  
+  # Success messages
+  entryAdded: "&a✓ Changelog-Eintrag erfolgreich hinzugefügt!"
+  entryRemoved: "&a✓ Changelog-Eintrag erfolgreich entfernt!"
+  guiClosed: "&a✓ Changelog geschlossen."
+  
+  # Error messages
+  noPermission: "&c❌ Keine Berechtigung."
+  playerOnly: "&c❌ Nur Spieler können das Changelog-GUI öffnen."
+  databaseError: "&c❌ Datenbankfehler. Bitte kontaktiere einen Administrator."
+  invalidId: "&c❌ Ungültige ID. Bitte gib eine Zahl ein."
+  messageTooLong: "&c❌ Die Nachricht ist zu lang. Maximum: 500 Zeichen."
+  
+  # Info messages
+  loading: "&6📋 Lade Changelog-Einträge..."
+  noEntries: "&e📝 Keine Changelog-Einträge gefunden."
+  detailViewSoon: "&7💡 Detailansicht für Changelog-Einträge kommt bald!"
+
+# Feature Configuration
+features:
+  # Maximum length for changelog messages
+  maxMessageLength: 500
+  
+  # Enable debug logging
+  debug: false
+  
+  # Auto-backup database (SQLite only)
+  autoBackup: true
+  
+  # Backup interval in hours
+  backupInterval: 24
